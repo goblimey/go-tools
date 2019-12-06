@@ -38,15 +38,23 @@ func TestStatus(t *testing.T) {
 <h3>Last Client Buffer</h3>
 <span id='clienttimestamp'>From Client [0]:
 [ :a-zA-Z0-9]*</span>
+<pre>
+<code>
 <div class="preformatted" id='clientbuffer'>
 00000000  66 6f  |fo|
 </div>
+</code>
+</pre>
 <h3>Last Server Buffer</h3>
 <span id='servertimestamp'>To Server [1]:
 [ :a-zA-Z0-9]*</span>
+<pre>
+<code>
 <div class="preformatted" id='serverbuffer'>
 00000000  3c 62 61 72 3e   |&lt;bar&gt;|
 </div>
+</code>
+</pre>
 `
 	regex := regexp.MustCompile(reduceString(expectedResultRegex))
 	clientBuffer := []byte("foo")

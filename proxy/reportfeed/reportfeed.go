@@ -19,19 +19,6 @@ type Buffer struct {
 	ContentLength int
 }
 
-const reportFormat = `
-<h3>Last Client Buffer</h3>
-<span id='clienttimestamp'>%s</span>
-<div class="preformatted" id='clientbuffer'>
-%s
-</div>
-<h3>Last Server Buffer</h3>
-<span id='servertimestamp'>%s</span>
-<div class="preformatted" id='serverbuffer'>
-%s
-</div>
-`
-
 // ReportFeed satisfies the status-reporter ReportFeedT interface.
 type ReportFeed struct {
 	// LogLevel is the log level - 0 is errors only.
