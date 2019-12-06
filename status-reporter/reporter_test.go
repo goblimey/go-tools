@@ -22,9 +22,7 @@ const format = `
  <body>
  <h2>Status</h2>
  <section id="content">	
-<div class='preformatted' id='statusreport'>
 foo
-</div>
  </section>
  </body>
 </html>

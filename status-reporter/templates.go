@@ -56,9 +56,7 @@ var reportText = `
 {{define "PageTitle"}}{{.PageTitle}}{{end}}
 {{define "ServiceName"}}{{.ServiceName}}{{end}}
 {{define "content"}}
-<div class='preformatted' id='statusreport'>
 {{.Content}}
-</div>
 {{end}}
 `
 var errorText = `
