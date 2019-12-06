@@ -11,10 +11,10 @@ const reportFormat = `
 </div>
 </code>
 </pre>
-<pre>
-<code>
 <h3>Last Server Buffer</h3>
 <span id='servertimestamp'>%s</span>
+<pre>
+<code>
 <div class="preformatted" id='serverbuffer'>
 %s
 </div>
