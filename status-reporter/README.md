@@ -32,5 +32,5 @@ For example, the status report provided by the proxy in this repository
 displays the contents of buffers that could potentially contain any text.
 It guards against an injection attack by
 pre-processing the buffers
-and changing any '<' into '&lt;'
-and any '>' into '&gt;'.
+and changing any '<' into '&amp;lt;'
+and any '>' into '&amp;gt;'.
