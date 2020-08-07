@@ -3,8 +3,11 @@ module github.com/goblimey/go-tools
 go 1.14
 
 require (
+	github.com/goblimey/go-tools/clock v0.0.0-00010101000000-000000000000
+	github.com/goblimey/go-tools/dailylogger v0.0.0-00010101000000-000000000000
 	github.com/goblimey/go-tools/logger v0.0.0-00010101000000-000000000000
 	github.com/goblimey/go-tools/statusreporter v0.0.0-00010101000000-000000000000
+	github.com/goblimey/go-tools/switchwriter v0.0.0-00010101000000-000000000000
 )
 
 replace (
