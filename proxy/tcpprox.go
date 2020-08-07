@@ -10,10 +10,10 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	
+
 	"github.com/goblimey/go-tools/logger"
 	reportfeed "github.com/goblimey/go-tools/proxy/reportfeed"
-	reporter "github.com/goblimey/go-tools/status-reporter"
+	reporter "github.com/goblimey/go-tools/statusreporter"
 )
 
 // Terminology:
