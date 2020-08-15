@@ -4,30 +4,18 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/goblimey/go-tools/logger"
+	"github.com/goblimey/go-tools/dailylogger"
 )
-
-// TestSetLevel tests the SetLevel method.
-func TestSetLevel(t *testing.T) {
-	logger := logger.MakeLogger()
-	reportFeed := MakeReportFeed(&logger)
-	
-	reportFeed.SetLogLevel(42)
-
-	if logger.LogLevel() != 42 {
-		t.Errorf("Expected logLevel 42, got %d", logger.LogLevel())
-	}
-}
 
 // TestSanitise tests the Sanitise function.
 func TestSanitise(t *testing.T) {
 	const expectedResult = "&lt;div&gt;&lt;/div&gt;"
 	str := "<div></div>"
-	
+
 	result := Sanitise(str)
 
 	if result != expectedResult {
-		t.Errorf("Expected sanitised result to be \"%s\", got \"%s\"", 
+		t.Errorf("Expected sanitised result to be \"%s\", got \"%s\"",
 			expectedResult, string(result))
 	}
 }
@@ -60,19 +48,19 @@ func TestStatus(t *testing.T) {
 	clientBuffer := []byte("foo")
 	serverBuffer := []byte("<bar>")
 
-	logger := logger.MakeLogger()
-	reportFeed := MakeReportFeed(&logger)
+	logger := dailylogger.New("", "", "")
+	reportFeed := MakeReportFeed(logger)
 
 	// Record only two characters of the client buffer.
 	reportFeed.RecordClientBuffer(&clientBuffer, 0, 2)
 	// Record all of the server buffer
 	reportFeed.RecordServerBuffer(&serverBuffer, 1, len(serverBuffer))
-	
+
 	result := reportFeed.Status()
 
 	reducedResult := reduceString(string(result))
 	if !regex.Match([]byte(reducedResult)) {
-		t.Errorf("Expected status report to match \"%v\", got \"%s\"", 
+		t.Errorf("Expected status report to match \"%v\", got \"%s\"",
 			regex, reducedResult)
 	}
 }

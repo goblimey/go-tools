@@ -1,15 +1,13 @@
 package dailylogger
 
 import (
-	"crypto/rand"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/goblimey/go-tools/clock"
+	ts "github.com/goblimey/go-tools/testsupport"
 )
 
 // TestGetDurationToMidnight tests the getDurationToMidnight method.
@@ -30,10 +28,11 @@ func TestGetDurationToMidnight(t *testing.T) {
 		t.Fatalf("expected duration to be \"%d\" actually \"%d\"", expectedDurationNanoseconds, duration.Nanoseconds())
 	}
 
-	// Test using a time that's not in UTC.
+	// Test using a time that's not in UTC - in July Paris is two
+	// hours ahead of UTC.
 	locationParis, _ := time.LoadLocation("Europe/Paris")
-	start = time.Date(2020, time.February, 14, 13, 5, 0, 0, locationParis)
-	expectedDurationNanoseconds = 10*time.Hour + 55*time.Minute
+	start = time.Date(2020, time.July, 4, 12, 5, 0, 0, locationParis)
+	expectedDurationNanoseconds = 11*time.Hour + 55*time.Minute
 	duration = getDurationToMidnight(start)
 	if duration.Nanoseconds() != int64(expectedDurationNanoseconds) {
 		t.Fatalf("expected duration to be \"%d\" actually \"%d\"", expectedDurationNanoseconds, duration.Nanoseconds())
@@ -48,22 +47,17 @@ func TestLogging(t *testing.T) {
 	// This test uses the filestore.  It creates a directory in /tmp containing
 	// a plain file.  At the end it attempts to remove everything it created.
 
-	directoryName, err := createWorkingDirectory()
+	directoryName, err := ts.CreateWorkingDirectory()
 	if err != nil {
 		t.Fatalf("createWorkingDirectory failed - %v", err)
 	}
-	defer removeWorkingDirectory(directoryName)
+	defer ts.RemoveWorkingDirectory(directoryName)
 
 	locationParis, _ := time.LoadLocation("Europe/Paris")
-	/*
-		days := []time.Time{
-			time.Date(2020, time.February, 14, 1, 2, 3, 4, locationParis),
-			time.Date(2020, time.February, 14, 2, 2, 3, 4, locationParis)}
-	*/
 	stoppedClock :=
 		clock.NewStoppedClock(2020, time.February, 14, 1, 2, 3, 4, locationParis)
+	writer := newWriter(stoppedClock, ".", "", "")
 
-	writer := newDailyWriterWithClock(stoppedClock, ".", "", "")
 	expectedFilename := "daily.2020-02-14.log"
 	expectedMessage := "hello world"
 	buffer := []byte(expectedMessage)
@@ -111,7 +105,107 @@ func TestLogging(t *testing.T) {
 	}
 }
 
-// TestRollover checks that the log rollover mecahanism creates a new file each day.
+// TestEnableAndDisable tests enabling and disabling logging.
+//
+func TestEnableAndDisable(t *testing.T) {
+	const firstMessage = "hello "
+	const secondMessage = "world"
+	const expectedResult = "hello world"
+
+	// This test uses the filestore.  It creates a directory in /tmp containing
+	// a plain file.  At the end it attempts to remove everything it created.
+
+	wd, err := ts.CreateWorkingDirectory()
+	if err != nil {
+		t.Fatalf("createWorkingDirectory failed - %v", err)
+	}
+	defer ts.RemoveWorkingDirectory(wd)
+
+	locationParis, _ := time.LoadLocation("Europe/Paris")
+	stoppedClock :=
+		clock.NewStoppedClock(2020, time.February, 14, 1, 2, 3, 4,
+			locationParis)
+
+	expectedLogDirPathName := wd + "/log"
+	expectedLogFileName := "daily.2020-02-14.log"
+	writer := newWriter(stoppedClock, expectedLogDirPathName, "", "")
+
+	buffer := []byte(firstMessage)
+	n, err1 := writer.Write(buffer)
+
+	if err1 != nil {
+		t.Fatalf("Write failed - %v", err1)
+	}
+
+	if n != len(firstMessage) {
+		t.Fatalf("Write returned %d - expected %d", n, len(firstMessage))
+	}
+
+	// Disable logging.  Nothing should be written and
+	// Write should return 0.
+	writer.DisableLogging()
+	buffer = []byte("goodbye ")
+	n, err2 := writer.Write(buffer)
+
+	if err2 != nil {
+		t.Fatalf("Write failed - %v", err2)
+	}
+
+	if n != 0 {
+		t.Fatalf("Write returned %d - expected %d", n, len(buffer))
+	}
+
+	// Enable logging.  The logger should now append to the log file.
+	writer.EnableLogging()
+	buffer = []byte(secondMessage)
+	n, err3 := writer.Write(buffer)
+
+	if err3 != nil {
+		t.Fatalf("Write failed - %v", err3)
+	}
+
+	if n != len(secondMessage) {
+		t.Fatalf("Write returned %d - expected %d", n, len(secondMessage))
+	}
+
+	// Check that one log file was created and contains the expected contents.
+	files, err := ioutil.ReadDir(expectedLogDirPathName)
+	if err != nil {
+		t.Fatalf("error scanning directory %s - %s", expectedLogDirPathName, err.Error())
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("directory %s contains %d files.  Should contain exactly one.",
+			expectedLogDirPathName, len(files))
+	}
+
+	if files[0].Name() != expectedLogFileName {
+		t.Fatalf("directory %s contains file \"%s\", expected \"%s\".",
+			expectedLogDirPathName, files[0].Name(), expectedLogFileName)
+	}
+
+	// Check the contents.
+	logFilePathName := expectedLogDirPathName + "/" + expectedLogFileName
+	inputFile, err := os.OpenFile(logFilePathName, os.O_RDONLY, 0644)
+	defer inputFile.Close()
+	b := make([]byte, 8096)
+	length, err := inputFile.Read(b)
+	if err != nil {
+		t.Fatalf("error reading logfile back - %v", err)
+	}
+	if length != len(expectedResult) {
+		t.Fatalf("logfile contains %d bytes - expected %d", length, len(expectedResult))
+	}
+
+	contents := string(b[:length])
+
+	if expectedResult != contents {
+		t.Fatalf("logfile contains \"%s\" - expected \"%s\"",
+			contents, expectedResult)
+	}
+}
+
+// TestRollover checks that the log rollover mechanism creates a new file each day.
 func TestRollover(t *testing.T) {
 
 	// This test uses the filestore.
@@ -123,11 +217,11 @@ func TestRollover(t *testing.T) {
 	buffer2 := []byte(expectedMessage2)
 	const expectedFilename2 = "foo.2020-02-15.bar"
 
-	directoryName, err := createWorkingDirectory()
+	directoryName, err := ts.CreateWorkingDirectory()
 	if err != nil {
 		t.Fatalf("createWorkingDirectory failed - %v", err)
 	}
-	defer removeWorkingDirectory(directoryName)
+	defer ts.RemoveWorkingDirectory(directoryName)
 
 	locationParis, _ := time.LoadLocation("Europe/Paris")
 	times := []time.Time{
@@ -136,8 +230,7 @@ func TestRollover(t *testing.T) {
 		// 00:01am The next day.
 		time.Date(2020, time.February, 15, 0, 0, 0, 0, locationParis)}
 	steppingClock := clock.NewSteppingClock(&times)
-
-	writer := newDailyWriterWithClock(steppingClock, ".", "foo.", ".bar")
+	writer := newWriter(steppingClock, "", "foo.", ".bar")
 
 	// This should write to expectedFilename1.
 	n, err := writer.Write(buffer1)
@@ -234,11 +327,11 @@ func TestRolloverWithLongDelay(t *testing.T) {
 	buffer2 := []byte(expectedMessage)
 	const expectedFilename = "foo.2020-02-16.bar"
 
-	directoryName, err := createWorkingDirectory()
+	directoryName, err := ts.CreateWorkingDirectory()
 	if err != nil {
 		t.Fatalf("createWorkingDirectory failed - %v", err)
 	}
-	defer removeWorkingDirectory(directoryName)
+	defer ts.RemoveWorkingDirectory(directoryName)
 
 	locationLondon, _ := time.LoadLocation("Europe/London")
 	times := []time.Time{
@@ -249,8 +342,7 @@ func TestRolloverWithLongDelay(t *testing.T) {
 		// rotation, talikng us into the day after next.
 		time.Date(2020, time.February, 16, 0, 0, 0, 0, locationLondon)}
 	steppingClock := clock.NewSteppingClock(&times)
-
-	writer := newDailyWriterWithClock(steppingClock, ".", "foo.", ".bar")
+	writer := newWriter(steppingClock, "", "foo.", ".bar")
 
 	// Write to the log for the 14th.
 	n, err := writer.Write(buffer1)
@@ -328,11 +420,11 @@ func TestAppendOnRestart(t *testing.T) {
 	const expectedFirstContents = "goodbye "
 	const expectedFinalContents = "goodbye cruel world"
 
-	directoryName, err := createWorkingDirectory()
+	directoryName, err := ts.CreateWorkingDirectory()
 	if err != nil {
 		t.Fatalf("createWorkingDirectory failed - %v", err)
 	}
-	defer removeWorkingDirectory(directoryName)
+	defer ts.RemoveWorkingDirectory(directoryName)
 
 	locationUTC, err := time.LoadLocation("UTC")
 	if err != nil {
@@ -342,7 +434,7 @@ func TestAppendOnRestart(t *testing.T) {
 	// Write some text to the logger.
 	// That should create a file for today.
 	stoppedClock := clock.NewStoppedClock(2020, time.February, 14, 0, 1, 30, 0, locationUTC)
-	writer1 := newDailyWriterWithClock(stoppedClock, ".", "log.", ".txt")
+	writer1 := newWriter(stoppedClock, ".", "log.", ".txt")
 	n, err := writer1.Write(buffer1)
 	if err != nil {
 		t.Fatalf("Write failed - %v", err)
@@ -369,7 +461,7 @@ func TestAppendOnRestart(t *testing.T) {
 	// Create a new writer.  On the first call it will behave as on system startup.  It should
 	// append to the existing daily log.
 	stoppedClock = clock.NewStoppedClock(2020, time.February, 14, 0, 2, 30, 0, locationUTC)
-	writer2 := newDailyWriterWithClock(stoppedClock, ".", "log.", ".txt")
+	writer2 := newWriter(stoppedClock, ".", "log.", ".txt")
 	n, err = writer2.Write(buffer2)
 	if err != nil {
 		t.Fatalf("Write failed - %v", err)
@@ -406,44 +498,4 @@ func TestAppendOnRestart(t *testing.T) {
 	if contents != expectedFinalContents {
 		t.Fatalf("logfile contains \"%s\" - expected \"%s\"", contents, expectedFinalContents)
 	}
-}
-
-// makeUUID creates a UUID.  See https://yourbasic.org/golang/generate-uuid-guid/.
-//
-func makeUUID() string {
-	// Produces something like "9e0825f2-e557-28df-93b7-a01c789f36a8".
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-	return uuid
-}
-
-// createWorkingDirectory create a working directory and makes it the current
-// directory.
-//
-func createWorkingDirectory() (string, error) {
-	directoryName := "/tmp/" + makeUUID()
-	err := os.Mkdir(directoryName, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	err = os.Chdir(directoryName)
-	if err != nil {
-		return "", err
-	}
-	return directoryName, nil
-}
-
-// removeWorkingDirectory removes the working directory and any files in it.
-//
-func removeWorkingDirectory(directoryName string) error {
-	err := os.RemoveAll(directoryName)
-	if err != nil {
-		return err
-	}
-	return nil
 }

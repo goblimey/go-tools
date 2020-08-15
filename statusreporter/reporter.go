@@ -25,7 +25,7 @@ const LogLevelRequestMiddle = "/loglevel/"
 
 // ReportFeedT defines the methods of the control object that the caller must suppy.
 type ReportFeedT interface {
-	// SetLogLevel sets the log level - 0 is minimal logging
+	// SetLogLevel sets the log level - 0 disables logging, anything else enables it. 
 	SetLogLevel(n uint8)
 	// Status gets the body of a status report
 	Status() []byte

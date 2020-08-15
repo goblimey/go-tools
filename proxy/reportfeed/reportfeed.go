@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goblimey/go-tools/logger"
+	"github.com/goblimey/go-tools/dailylogger"
 )
 
 // Buffer contains an input or output buffer.
@@ -21,15 +21,14 @@ type Buffer struct {
 
 // ReportFeed satisfies the status-reporter ReportFeedT interface.
 type ReportFeed struct {
-	// LogLevel is the log level - 0 is errors only.
-	logger *logger.LoggerT
+	logger           *dailylogger.DailyWriter
 	lastClientBuffer *Buffer
 	lastServerBuffer *Buffer
 	mutex            sync.Mutex
 }
 
 // MakeReportFeed creates and returns a new ReportFeed object
-func MakeReportFeed(logger *logger.LoggerT) *ReportFeed {
+func MakeReportFeed(logger *dailylogger.DailyWriter) *ReportFeed {
 	var reportFeed ReportFeed
 	reportFeed.SetLogger(logger)
 	return &reportFeed
@@ -37,7 +36,11 @@ func MakeReportFeed(logger *logger.LoggerT) *ReportFeed {
 
 //SetLogLevel satisfies the ReportFeedT interface.
 func (rf *ReportFeed) SetLogLevel(level uint8) {
-	rf.logger.SetLogLevel(level)
+	if level == 0 {
+		rf.logger.DisableLogging()
+	} else {
+		rf.logger.EnableLogging()
+	}
 }
 
 //Status satisfies the ReportFeedT interface.
@@ -73,7 +76,8 @@ func (rf *ReportFeed) Status() []byte {
 	return []byte(reportBody)
 }
 
-func (rf *ReportFeed) SetLogger(logger *logger.LoggerT) {
+// SetLogger sets the logger.
+func (rf *ReportFeed) SetLogger(logger *dailylogger.DailyWriter) {
 	rf.logger = logger
 }
 
