@@ -1,4 +1,4 @@
-module gtihub.com/goblimey/go-tools/dailylogger
+module github.com/goblimey/go-tools/dailylogger
 
 go 1.14
 
