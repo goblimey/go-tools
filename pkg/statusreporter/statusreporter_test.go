@@ -93,7 +93,7 @@ func TestSetLoggingLevelRequestWithJunkLevel(t *testing.T) {
 	var httpRequest http.Request
 	httpRequest.URL = &url
 	httpRequest.Method = "POST"
-	responseWriterForTest := MakeResponseWriterForTest()
+	responseWriterForTest := NewResponseWriterForTest()
 	var reportFeed = new(ReportFeedForTest)
 
 	reporter := MakeReporter(reportFeed, "foo", 42)
@@ -117,7 +117,7 @@ func TestStatusRequest(t *testing.T) {
 	httpRequest.URL = &url
 	httpRequest.Method = "GET"
 	var reportFeed = new(ReportFeedForTest)
-	responseWriterForTest := MakeResponseWriterForTest()
+	responseWriterForTest := NewResponseWriterForTest()
 
 	reporter := MakeReporter(reportFeed, "foo", 42)
 	reporter.HandleStatusRequest(responseWriterForTest, &httpRequest)
@@ -133,7 +133,7 @@ func TestStatusRequest(t *testing.T) {
 	// Test using text templates.
 	url.Opaque = "/" + serviceName + "/report" // url.RequestURI() will return this URI
 	reportFeed = new(ReportFeedForTest)
-	responseWriterForTest = MakeResponseWriterForTest()
+	responseWriterForTest = NewResponseWriterForTest()
 	reporter = MakeReporter(reportFeed, "foo", 42)
 	reporter.SetUseTextTemplates(true)
 	reporter.HandleStatusRequest(responseWriterForTest, &httpRequest)
@@ -159,7 +159,7 @@ func TestStatusRequestWithServiceName(t *testing.T) {
 	httpRequest.URL = &url
 	httpRequest.Method = "GET"
 	var reportFeed = new(ReportFeedForTest)
-	responseWriterForTest := MakeResponseWriterForTest()
+	responseWriterForTest := NewResponseWriterForTest()
 	reporter := MakeReporter(reportFeed, "foo", 42)
 	reporter.SetServiceName(serviceName)
 	reporter.HandleStatusRequest(responseWriterForTest, &httpRequest)
@@ -175,7 +175,7 @@ func TestStatusRequestWithServiceName(t *testing.T) {
 	// Test using text templates.
 	url.Opaque = "/" + serviceName + "/report" // url.RequestURI() will return this URI
 	reportFeed = new(ReportFeedForTest)
-	responseWriterForTest = MakeResponseWriterForTest()
+	responseWriterForTest = NewResponseWriterForTest()
 	reporter = MakeReporter(reportFeed, "foo", 42)
 	reporter.SetServiceName(serviceName)
 	reporter.SetUseTextTemplates(true)
@@ -197,4 +197,3 @@ func reduceString(str string) string {
 	re = regexp.MustCompile(`[ \t]+`)
 	return re.ReplaceAllString(str, " ")
 }
-

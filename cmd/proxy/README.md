@@ -24,10 +24,11 @@ Running on server {servername},
 receiving HTTP requests on port 2102
 and passing them onto a server on localhost port 2101.
 Taking control requests on port 4001
-and logging to ./proxy.log,
-initially quiet (log level 0):
+with logging to initially quiet (log level 0):
 
-    proxy -p -2102 -r localhost:2101 -l {servername} -ca {servername} -cp 4001 -q >proxy.log 2>&1 &
+    proxy -p 2102 -r localhost:2101 -l {servername} -ca {servername} -cp 4001 -q &
+
+The log file will be ./proxy.{yyyy-mm-dd}.log, which will roll over every day.
 
 
 ## Log Level

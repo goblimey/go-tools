@@ -1,6 +1,7 @@
 package statusreporter
 
-// This file defines the static web pages and the text of the HTML templates.
+// This file defines the static web pages and the text of the HTML templates
+// used by the status reporter HTML interface.
 
 // Define the static web pages
 var stylesheetPage = []byte(`
@@ -34,7 +35,7 @@ var internalErrorPage = []byte(`
 </html>
 `)
 
-// Define the text for the page templates.
+// baseText defines the base template for pages.
 var baseText = `
 <!DOCTYPE html>
 <html lang="en">
@@ -52,6 +53,7 @@ var baseText = `
 </html>
 `
 
+// reportText defines the template for report pages.
 var reportText = `
 {{define "PageTitle"}}{{.PageTitle}}{{end}}
 {{define "ServiceName"}}{{.ServiceName}}{{end}}
@@ -59,6 +61,8 @@ var reportText = `
 {{.Content}}
 {{end}}
 `
+
+// errorText defines the tmplate for error pages.
 var errorText = `
 {{define "PageTitle"}}Error{{end}}
 {{define "content"}}

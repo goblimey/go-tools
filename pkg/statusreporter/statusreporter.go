@@ -23,9 +23,9 @@ const StatusRequestEnd = "/report"
 // LogLevelRequestMiddle defines the middle part of the HTTP loglevel request.
 const LogLevelRequestMiddle = "/loglevel/"
 
-// ReportFeedT defines the methods of the control object that the caller must suppy.
-type ReportFeedT interface {
-	// SetLogLevel sets the log level - 0 disables logging, anything else enables it. 
+// ReportFeed defines the methods of the control object that the caller must suppy.
+type ReportFeed interface {
+	// SetLogLevel sets the log level - 0 disables logging, anything else enables it.
 	SetLogLevel(n uint8)
 	// Status gets the body of a status report
 	Status() []byte
@@ -40,8 +40,8 @@ type StatusReport struct {
 
 // Reporter provides the reporting API.
 type Reporter struct {
-	// ReportFeedPriv is a reference to a ReporterFeed instance
-	ReportFeedPriv ReportFeedT
+	// ReportFeedPriv is a reference to a ReportFeed instance
+	ReportFeedPriv ReportFeed
 	// UseTextTemplates makes the status report use text templates rather than html templates.
 	UseTextTemplates bool
 	// ServiceNamePriv is the name of the web service.  All requests start with this name.  Default is "status"
@@ -68,7 +68,7 @@ type Reporter struct {
 }
 
 // MakeReporter creates and returns a reporter object
-func MakeReporter(reportFeed ReportFeedT, host string, port int) Reporter {
+func MakeReporter(reportFeed ReportFeed, host string, port int) Reporter {
 	var reporter Reporter
 	reporter.InitTemplates()
 	reporter.SetReportFeed(reportFeed)
@@ -85,7 +85,7 @@ func (r *Reporter) SetUseTextTemplates(useTextTemplates bool) {
 }
 
 // SetReportFeed sets the reporter feed.
-func (r *Reporter) SetReportFeed(reportFeed ReportFeedT) {
+func (r *Reporter) SetReportFeed(reportFeed ReportFeed) {
 	r.ReportFeedPriv = reportFeed
 }
 
@@ -114,7 +114,7 @@ func (r *Reporter) HandleStatusRequest(writer http.ResponseWriter, request *http
 	statusReport := StatusReport{"Status", r.ServiceNamePriv, body}
 	if r.UseTextTemplates {
 		// The supplied r.ReportFeedPriv.Status() value is expected to contain
-		// HTML tags so we need to use the less secure text template.  That 
+		// HTML tags so we need to use the less secure text template.  That
 		// introduces the risk of HTML in the buffers being used for an injection
 		// attack, so we disallow HTML there.
 		err := r.TextReportTemplate.Execute(writer, statusReport)
@@ -129,7 +129,7 @@ func (r *Reporter) HandleStatusRequest(writer http.ResponseWriter, request *http
 			return
 		}
 	} else {
-		// The r.ReportFeedPriv.Status() value should not contains HTML tags so 
+		// The r.ReportFeedPriv.Status() value should not contains HTML tags so
 		// we can use the more secure HTML template.
 		err := r.HTMLReportTemplate.Execute(writer, statusReport)
 		if err != nil {
@@ -227,5 +227,3 @@ func (r *Reporter) InitTemplates() {
 	r.ErrorTemplate = htmlTemplate.New("error")
 	r.ErrorTemplate = htmlTemplate.Must(r.ErrorTemplate.Parse(errorText + baseText))
 }
-
-

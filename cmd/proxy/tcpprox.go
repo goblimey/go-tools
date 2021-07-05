@@ -11,8 +11,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/goblimey/go-tools/logger"
-	reportfeed "github.com/goblimey/go-tools/proxy/reportfeed"
+	"github.com/goblimey/go-tools/dailylogger"
+	"github.com/goblimey/go-tools/proxy/reportfeed"
 	reporter "github.com/goblimey/go-tools/statusreporter"
 )
 
@@ -32,12 +32,12 @@ import (
 // The /status/report request displays the timestamp and contents of the last
 // input and output buffers.
 
-var log logger.LoggerT
+var log *dailylogger.Writer
 
 var reportFeed *reportfeed.ReportFeed
 
 func init() {
-	log = logger.MakeLogger()
+	log = dailylogger.New(".", "proxy.", ".log")
 }
 
 func main() {
@@ -45,7 +45,7 @@ func main() {
 	localPort := flag.Int("p", 0, "Local Port to listen on")
 	localHost := flag.String("l", "", "Local address to listen on")
 	remoteHostPtr := flag.String("r", "", "Remote Server address host:port")
-	configPtr := flag.String("c", "", "Use a config file (set TLS ect) - Commandline params overwrite config file")
+	configPtr := flag.String("c", "", "Use a config file (set TLS etc) - Commandline params overwrite config file")
 	tlsPtr := flag.Bool("s", false, "Create a TLS Proxy")
 	certFilePtr := flag.String("cert", "", "Use a specific certificate file")
 
@@ -63,11 +63,11 @@ func main() {
 	flag.Parse()
 
 	if verbose {
-		log.SetLogLevel(1)
+		log.EnableLogging()
 	}
 
 	if quiet {
-		log.SetLogLevel(0)
+		log.DisableLogging()
 	}
 
 	fmt.Fprintf(log, "setting up routes\n")
@@ -82,7 +82,7 @@ func main() {
 
 	fmt.Fprintf(log, "setting up the status reporter\n")
 
-	reportFeed = reportfeed.MakeReportFeed(&log)
+	reportFeed = reportfeed.MakeReportFeed(log)
 
 	proxyReporter := reporter.MakeReporter(reportFeed, *controlHost, *controlPort)
 

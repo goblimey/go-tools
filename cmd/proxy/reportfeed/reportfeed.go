@@ -19,22 +19,22 @@ type Buffer struct {
 	ContentLength int
 }
 
-// ReportFeed satisfies the status-reporter ReportFeedT interface.
+// ReportFeed satisfies the status-reporter ReportFeed interface.
 type ReportFeed struct {
-	logger           *dailylogger.DailyWriter
+	logger           *dailylogger.Writer
 	lastClientBuffer *Buffer
 	lastServerBuffer *Buffer
 	mutex            sync.Mutex
 }
 
 // MakeReportFeed creates and returns a new ReportFeed object
-func MakeReportFeed(logger *dailylogger.DailyWriter) *ReportFeed {
+func MakeReportFeed(logger *dailylogger.Writer) *ReportFeed {
 	var reportFeed ReportFeed
 	reportFeed.SetLogger(logger)
 	return &reportFeed
 }
 
-//SetLogLevel satisfies the ReportFeedT interface.
+//SetLogLevel enables or disables logging.
 func (rf *ReportFeed) SetLogLevel(level uint8) {
 	if level == 0 {
 		rf.logger.DisableLogging()
@@ -43,7 +43,7 @@ func (rf *ReportFeed) SetLogLevel(level uint8) {
 	}
 }
 
-//Status satisfies the ReportFeedT interface.
+// Status creates a status report.
 func (rf *ReportFeed) Status() []byte {
 	clientLeader := "no input buffer"
 	clientHexDump := ""
@@ -77,7 +77,7 @@ func (rf *ReportFeed) Status() []byte {
 }
 
 // SetLogger sets the logger.
-func (rf *ReportFeed) SetLogger(logger *dailylogger.DailyWriter) {
+func (rf *ReportFeed) SetLogger(logger *dailylogger.Writer) {
 	rf.logger = logger
 }
 

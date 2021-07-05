@@ -23,8 +23,14 @@ func MakeUUID() string {
 	return uuid
 }
 
-// CreateWorkingDirectory create a working directory and makes it the current
-// directory.
+// CreateWorkingDirectory create a temporary working directory and makes it the
+// current directory.  Use it like so:
+//
+//     dir := CreateWorkingDirectory()
+//
+//     defer RemoveWorkingDirectory(dir)
+//
+// Now create files in the current directory.  It and its contents will be removed when the deferred RemoveWorkingDirectory runs.
 //
 func CreateWorkingDirectory() (string, error) {
 	directoryName := "/tmp/" + MakeUUID()

@@ -7,18 +7,18 @@ import (
 
 const maxBufferLength = 1024
 
-// ReportFeedForTest respects the status-reporter ReportFeedT interface.
+// ReportFeedForTest respects the statusreporter ReportFeed interface.
 type ReportFeedForTest struct {
 	// LogLevel is the log level - 0 is errors only.
 	LogLevel uint8
 }
 
-//SetLogLevel satisfies the ReportFeedT interface.
+//SetLogLevel satisfies the ReportFeed interface.
 func (trf *ReportFeedForTest) SetLogLevel(level uint8) {
 	trf.LogLevel = level
 }
 
-//Status satisfies the ReportFeedT interface.
+//Status satisfies the ReportFeed interface.
 func (trf *ReportFeedForTest) Status() []byte {
 	reportBody := "foo"
 	return []byte(reportBody)
@@ -41,7 +41,8 @@ type ResponseWriterForTest struct {
 	headerValue *int
 }
 
-func MakeResponseWriterForTest() ResponseWriterForTest {
+// 
+func NewResponseWriterForTest() ResponseWriterForTest {
 	writer := new(ResponseWriterForTest)
 	writer.Init()
 
@@ -95,4 +96,3 @@ func (trw ResponseWriterForTest) Length() int {
 func (trw ResponseWriterForTest) HeaderValue() int {
 	return *trw.headerValue
 }
-
