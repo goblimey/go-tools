@@ -19,22 +19,24 @@ type Buffer struct {
 	ContentLength int
 }
 
-// ReportFeed satisfies the status-reporter ReportFeedT interface.
+// ReportFeed contains te data for a StatusReporter.
 type ReportFeed struct {
-	logger           *dailylogger.DailyWriter
+	logger           *dailylogger.Writer
 	lastClientBuffer *Buffer
 	lastServerBuffer *Buffer
 	mutex            sync.Mutex
 }
 
 // MakeReportFeed creates and returns a new ReportFeed object
-func MakeReportFeed(logger *dailylogger.DailyWriter) *ReportFeed {
+func MakeReportFeed(logger *dailylogger.Writer) *ReportFeed {
 	var reportFeed ReportFeed
 	reportFeed.SetLogger(logger)
 	return &reportFeed
 }
 
-//SetLogLevel satisfies the ReportFeedT interface.
+// SetLogLevel sets the log level and satisfies the StatusReporter
+// interface.
+//
 func (rf *ReportFeed) SetLogLevel(level uint8) {
 	if level == 0 {
 		rf.logger.DisableLogging()
@@ -43,7 +45,9 @@ func (rf *ReportFeed) SetLogLevel(level uint8) {
 	}
 }
 
-//Status satisfies the ReportFeedT interface.
+// Status provides a status report for the proxy.  It satisfies the
+// StatusReporter interface.
+//
 func (rf *ReportFeed) Status() []byte {
 	clientLeader := "no input buffer"
 	clientHexDump := ""
@@ -77,7 +81,7 @@ func (rf *ReportFeed) Status() []byte {
 }
 
 // SetLogger sets the logger.
-func (rf *ReportFeed) SetLogger(logger *dailylogger.DailyWriter) {
+func (rf *ReportFeed) SetLogger(logger *dailylogger.Writer) {
 	rf.logger = logger
 }
 

@@ -11,7 +11,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/goblimey/go-tools/logger"
+	"github.com/goblimey/go-tools/dailylogger"
 	reportfeed "github.com/goblimey/go-tools/proxy/reportfeed"
 	reporter "github.com/goblimey/go-tools/statusreporter"
 )
@@ -32,12 +32,12 @@ import (
 // The /status/report request displays the timestamp and contents of the last
 // input and output buffers.
 
-var log logger.LoggerT
+var log *dailylogger.Writer
 
 var reportFeed *reportfeed.ReportFeed
 
 func init() {
-	log = logger.MakeLogger()
+	log = dailylogger.New("./log", "dailylog.", ".txt")
 }
 
 func main() {
@@ -63,11 +63,11 @@ func main() {
 	flag.Parse()
 
 	if verbose {
-		log.SetLogLevel(1)
+		log.EnableLogging()
 	}
 
 	if quiet {
-		log.SetLogLevel(0)
+		log.DisableLogging()
 	}
 
 	fmt.Fprintf(log, "setting up routes\n")
@@ -82,7 +82,7 @@ func main() {
 
 	fmt.Fprintf(log, "setting up the status reporter\n")
 
-	reportFeed = reportfeed.MakeReportFeed(&log)
+	reportFeed = reportfeed.MakeReportFeed(log)
 
 	proxyReporter := reporter.MakeReporter(reportFeed, *controlHost, *controlPort)
 

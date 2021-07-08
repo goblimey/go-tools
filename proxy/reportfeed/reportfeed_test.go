@@ -48,7 +48,7 @@ func TestStatus(t *testing.T) {
 	clientBuffer := []byte("foo")
 	serverBuffer := []byte("<bar>")
 
-	logger := dailylogger.New("", "", "")
+	logger := dailylogger.New("/tmp", "", "")
 	reportFeed := MakeReportFeed(logger)
 
 	// Record only two characters of the client buffer.
