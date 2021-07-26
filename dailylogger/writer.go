@@ -160,13 +160,6 @@ func (dw *Writer) logRotator() {
 		// Sleep until the end of day
 		now := time.Now()
 		waitTime := getDurationToMidnight(now)
-		secondsToGo := (waitTime / time.Second) % 60
-		minutesToGo := waitTime / time.Minute % 60
-		hoursToGo := waitTime / time.Hour % 24
-
-		fmt.Printf("logRotator: sleeping for %02d:%02d:%02d until %v\n",
-			hoursToGo, minutesToGo, secondsToGo, getNextMidnight(now))
-
 		time.Sleep(waitTime)
 
 		// Wake up and rotate the log file using the next
