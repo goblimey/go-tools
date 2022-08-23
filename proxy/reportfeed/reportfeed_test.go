@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/goblimey/go-tools/dailylogger"
+	"github.com/goblimey/go-tools/logger"
 )
 
 // TestSanitise tests the Sanitise function.
@@ -48,8 +48,8 @@ func TestStatus(t *testing.T) {
 	clientBuffer := []byte("foo")
 	serverBuffer := []byte("<bar>")
 
-	logger := dailylogger.New("", "", "")
-	reportFeed := MakeReportFeed(logger)
+	log := logger.New()
+	reportFeed := New(log)
 
 	// Record only two characters of the client buffer.
 	reportFeed.RecordClientBuffer(&clientBuffer, 0, 2)

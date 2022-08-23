@@ -24,6 +24,8 @@ import (
 //
 // The program variables and functions are named accordingly.
 //
+// To see the command line argument, run "proxy -h" or "proxy --help".
+//
 // Logging can be verbose or quiet.  It's verbose by default.  It can be set
 // initially by options and at runtime by sending HTTP requests:
 //    /status/loglevel/0
@@ -32,25 +34,25 @@ import (
 // The /status/report request displays the timestamp and contents of the last
 // input and output buffers.
 
-var log logger.LoggerT
+var log *logger.LoggerT
 
 var reportFeed *reportfeed.ReportFeed
 
 func init() {
-	log = logger.MakeLogger()
+	log = logger.New()
 }
 
 func main() {
-
-	localPort := flag.Int("p", 0, "Local Port to listen on")
-	localHost := flag.String("l", "", "Local address to listen on")
+	// Handle command line arguments.
+	localPortPtr := flag.Int("p", 0, "Local Port to listen on")
+	localHostPtr := flag.String("l", "", "Local address to listen on")
 	remoteHostPtr := flag.String("r", "", "Remote Server address host:port")
-	configPtr := flag.String("c", "", "Use a config file (set TLS ect) - Commandline params overwrite config file")
+	configFilePtr := flag.String("c", "", "Use a config file (set TLS ect) - Commandline params overwrite config file")
 	tlsPtr := flag.Bool("s", false, "Create a TLS Proxy")
 	certFilePtr := flag.String("cert", "", "Use a specific certificate file")
 
-	controlHost := flag.String("ca", "localhost", "hostname to listen on for http logging requests")
-	controlPort := flag.Int("cp", 8080, "port to listen on for http logging requests")
+	controlHostPtr := flag.String("ca", "localhost", "hostname to listen on for status requests")
+	controlPortPtr := flag.Int("cp", 8080, "port to listen on for status requests")
 
 	verbose := false
 	flag.BoolVar(&verbose, "v", true, "verbose logging (shorthand)")
@@ -62,17 +64,31 @@ func main() {
 
 	flag.Parse()
 
+	localPort := *localPortPtr     // Local Port to listen on.
+	localHost := *localHostPtr     // Local address to listen on.
+	remoteHost := *remoteHostPtr   // Remote Server address host:port.
+	certFile := *certFilePtr       // cert file to support https.
+	configFile := *configFilePtr   // Config file for TLS connection.
+	controlHost := *controlHostPtr // Hostname for status requests
+	controlPort := *controlPortPtr // Port for status requests.
+	isTLS := *tlsPtr               // If true, offer HTTPS, otherwise http.
+
+	// Set up the logging.  It should be either quiet or verbose.
 	if verbose {
 		log.SetLogLevel(1)
 	}
-
 	if quiet {
-		log.SetLogLevel(0)
+		log.SetLogLevel(0) // quiet trumps verbose.
 	}
+
+	// Set up the status reporter and the proxy server
+
+	fmt.Fprintf(log, "setting up status reporter")
+	reportFeed = makeReporter(controlHost, controlPort)
 
 	fmt.Fprintf(log, "setting up routes\n")
 
-	setConfig(*configPtr, *localPort, *localHost, *remoteHostPtr, *certFilePtr)
+	setConfig(configFile, localPort, localHost, remoteHost, certFile)
 
 	if config.Remotehost == "" {
 		fmt.Fprintf(os.Stderr, "[x] Remote host required")
@@ -80,19 +96,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(log, "setting up the status reporter\n")
-
-	reportFeed = reportfeed.MakeReportFeed(&log)
-
-	proxyReporter := reporter.MakeReporter(reportFeed, *controlHost, *controlPort)
-
-	proxyReporter.SetUseTextTemplates(true)
-
-	// Start the HTTP server for control requests.
-	go proxyReporter.StartService()
-
 	// Start the main server for NTRIP traffic.
-	startClientListener(*tlsPtr)
+	startClientListener(isTLS)
 }
 
 // connect to local first
@@ -228,4 +233,19 @@ func setConfig(configFile string, localPort int, localHost, remoteHost string, c
 	if remoteHost != "" {
 		config.Remotehost = remoteHost
 	}
+}
+
+func makeReporter(controlHost string, controlPort int) *reportfeed.ReportFeed {
+	fmt.Fprintf(log, "setting up the status reporter\n")
+
+	rf := reportfeed.New(log)
+
+	proxyReporter := reporter.MakeReporter(rf, controlHost, controlPort)
+
+	proxyReporter.SetUseTextTemplates(true)
+
+	// Start the HTTP server for control requests.
+	go proxyReporter.StartService()
+
+	return rf
 }
