@@ -84,11 +84,11 @@ func main() {
 	// Set up the status reporter and the proxy server
 
 	fmt.Fprintf(log, "setting up status reporter")
-	reportFeed = makeReporter(controlHost, controlPort)
+	SetReportFeed(makeReporter(controlHost, controlPort))
 
 	fmt.Fprintf(log, "setting up routes\n")
 
-	setConfig(configFile, localPort, localHost, remoteHost, certFile)
+	SetConfig(configFile, localPort, localHost, remoteHost, certFile)
 
 	if config.Remotehost == "" {
 		fmt.Fprintf(os.Stderr, "[x] Remote host required")
@@ -97,12 +97,16 @@ func main() {
 	}
 
 	// Start the main server for NTRIP traffic.
-	startClientListener(isTLS)
+	StartClientListener(isTLS)
 }
 
-// connect to local first
-//
-func startClientListener(isTLS bool) {
+// SetReportFeed sets the
+func SetReportFeed(feed *reportfeed.ReportFeed) {
+	reportFeed = feed
+}
+
+// StartClientListener starts listening for traffic from the client.
+func StartClientListener(isTLS bool) {
 
 	client := connectToClient(isTLS)
 	defer func() { client.Close() }()
@@ -204,7 +208,8 @@ func handleServerMessages(server, client net.Conn, id int) {
 	}
 }
 
-func setConfig(configFile string, localPort int, localHost, remoteHost string, certFile string) {
+// SetConfig sets the proxy config - the server for which it acts as a proxy etc.
+func SetConfig(configFile string, localPort int, localHost, remoteHost string, certFile string) {
 	if configFile != "" {
 		data, err := ioutil.ReadFile(configFile)
 		if err != nil {
