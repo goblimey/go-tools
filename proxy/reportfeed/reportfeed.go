@@ -31,7 +31,7 @@ type ReportFeed struct {
 // This is a compile-time check that ReportFeed implements the statusreporter.ReportFeedT interface.
 var _ statusreporter.ReportFeedT = (*ReportFeed)(nil)
 
-// MakeReportFeed creates and returns a new ReportFeed object
+// New creates and returns a new ReportFeed object
 func New(logger *logger.LoggerT) *ReportFeed {
 	var reportFeed ReportFeed
 	reportFeed.SetLogger(logger)
