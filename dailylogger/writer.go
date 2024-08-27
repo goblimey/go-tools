@@ -33,7 +33,6 @@ import (
 // controlled by a Clock object.  The New factory function creates a Clock which
 // is a thin wrapper around the standard time service.  That should be used by
 // production code.  Tests can use a clock object that supplies predefined values.
-//
 type Writer struct {
 	logMutex        sync.Mutex
 	loggingDisabled bool                 // True if logging is disable. (Logging is enabled by default.)
@@ -50,7 +49,6 @@ var _ io.Writer = (*Writer)(nil)
 
 // New creates a Writer, starts the log rotator and returns the writer.  Production
 // code should call this to get a Writer.
-//
 func New(logDir, leader, trailer string) *Writer {
 
 	dw := newWriter(nil, logDir, leader, trailer)
@@ -63,7 +61,6 @@ func New(logDir, leader, trailer string) *Writer {
 // newWriter creates a daily writer with a supplied switchwriter and clock,
 // and returns a pointer to it. This is called by New as a helper method and by
 // unit tests.
-//
 func newWriter(cl clock.Clock, logDir, leader, trailer string) *Writer {
 
 	// The logfile is of the form "logDir/leader.yyyy-mm-dd.trailer".  The default
@@ -106,7 +103,6 @@ func newWriter(cl clock.Clock, logDir, leader, trailer string) *Writer {
 
 // Write writes the buffer to the daily log file, creating the file at the
 // start of each day.
-//
 func (dw *Writer) Write(buffer []byte) (int, error) {
 	if dw.loggingDisabled {
 		return 0, nil
@@ -134,7 +130,6 @@ func (dw *Writer) DisableLogging() {
 
 // GetTimestampForLog gets the timestamp for a log entry, for example
 // "2020-02-14 15:42:11.789 UTC".  This uses the real time, not the supplied clock.
-//
 func (dw *Writer) GetTimestampForLog() string {
 	now := time.Now()
 	return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%03d %s",
@@ -160,13 +155,6 @@ func (dw *Writer) logRotator() {
 		// Sleep until the end of day
 		now := time.Now()
 		waitTime := getDurationToMidnight(now)
-		secondsToGo := (waitTime / time.Second) % 60
-		minutesToGo := waitTime / time.Minute % 60
-		hoursToGo := waitTime / time.Hour % 24
-
-		fmt.Printf("logRotator: sleeping for %02d:%02d:%02d until %v\n",
-			hoursToGo, minutesToGo, secondsToGo, getNextMidnight(now))
-
 		time.Sleep(waitTime)
 
 		// Wake up and rotate the log file using the next
@@ -231,7 +219,6 @@ func createlogDirectory(directory string) {
 // closeLog is a helper function that closes the log file (which
 // also flushes any uncommitted writes).  It doesn't apply the
 // lock so it should only be called by a function that does.
-//
 func (dw *Writer) closeLog() {
 	dw.switchwriter.SwitchTo(nil)
 }
@@ -254,7 +241,6 @@ func (dw *Writer) openLog(startOfToday time.Time) {
 
 // getLogPathname returns today's log filename, for example "data.2020-01-19.rtcm3".
 // The time is supplied to aid unit testing.
-//
 func (dw *Writer) getLogPathname(now time.Time) string {
 
 	return fmt.Sprintf("%s/%s%04d-%02d-%02d%s",
@@ -263,7 +249,6 @@ func (dw *Writer) getLogPathname(now time.Time) string {
 
 // openFile either creates and opens the file or, if it already exists, opens it
 // in append mode.
-//
 func openFile(name string) (*os.File, error) {
 	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -289,7 +274,6 @@ func getNextMidnight(start time.Time) time.Time {
 
 // getDurationToMidnight gets the duration between the start time
 // and midnight at the beginning of the next day in the same timezone.
-//
 func getDurationToMidnight(start time.Time) time.Duration {
 	nextMidnight := getNextMidnight(start)
 	return nextMidnight.Sub(start)
